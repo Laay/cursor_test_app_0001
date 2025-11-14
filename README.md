@@ -50,6 +50,33 @@ Behavior:
 - Every turn, it decides whether relevant ColBERT chunks exist. If yes, it cites them; otherwise it falls back to a general ATS answer using the LLM.
 - Type `exit` or `quit` (or press Ctrl+C) to end the session.
 
+### Use the Chatbot from Jupyter
+If you prefer to stay inside a notebook, instantiate the new `ColbertChatbot` helper which keeps a rolling context window and works without any FastAPI/Streamlit-style dependencies.
+
+```python
+from pathlib import Path
+from rag import build_colbert_index, ColbertChatbot
+
+INDEX_NAME = "ats_rag_index"
+METADATA = Path("data/chunk_metadata.json")
+
+if not METADATA.exists():
+    build_colbert_index(
+        docs_dir="docs",
+        index_name=INDEX_NAME,
+        chunk_size=300,
+        overlap=50,
+    )
+
+chatbot = ColbertChatbot(index_name=INDEX_NAME, metadata_path=str(METADATA))
+print(chatbot.greet())
+
+response = chatbot.ask("Summarize the sample document.")
+print(response.answer)
+```
+
+For a ready-to-run walkthrough, open `notebooks/colbert_chatbot_demo.ipynb`.
+
 ### Customization Tips
 - Change the OpenAI model (`--model` flag) to match what your account supports.
 - If you ingest long documents, tweak `--chunk-size`/`--overlap` during indexing.

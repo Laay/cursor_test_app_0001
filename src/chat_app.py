@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 from typing import List
 
-from rag import ColbertRAGPipeline
+from rag import ColbertChatbot
 
 
 def parse_args() -> argparse.Namespace:
@@ -13,6 +13,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--metadata-path", type=Path, default=Path("data/chunk_metadata.json"), help="Metadata file emitted during indexing.")
     parser.add_argument("--k", type=int, default=3, help="Number of retrieved chunks to use as context.")
     parser.add_argument("--model", type=str, default="gpt-4o-mini", help="LLM model identifier for OpenAI Chat Completions.")
+    parser.add_argument("--context-window", type=int, default=6, help="Number of conversation turns to keep in memory.")
     return parser.parse_args()
 
 
@@ -33,15 +34,15 @@ def main() -> None:
     print("or your uploaded documents. Type 'exit' to quit.")
     print("=" * 60)
 
-    conversation: list[dict] = []
-    pipeline = ColbertRAGPipeline(
+    chatbot = ColbertChatbot(
         index_name=args.index_name,
         metadata_path=args.metadata_path,
         k=args.k,
         model=args.model,
+        context_window=args.context_window,
     )
 
-    print("Assistant: Hi there! I'm ready to answer general questions and look things up in your docs.")
+    print(f"Assistant: {chatbot.greet()}")
 
     while True:
         try:
@@ -57,18 +58,15 @@ def main() -> None:
             print("Assistant: Thanks for chatting. Goodbye!")
             break
 
-        conversation.append({"role": "user", "content": user_input})
         try:
-            result = pipeline.answer(user_input, conversation)
+            response = chatbot.ask(user_input)
         except Exception as exc:
             print(f"Assistant: I ran into an error: {exc}")
             continue
 
-        answer = result["answer"]
-        conversation.append({"role": "assistant", "content": answer})
-        print(f"Assistant: {answer}\n")
-        if result["used_context"]:
-            print(f"(References: {format_sources(result['contexts'])})\n")
+        print(f"Assistant: {response.answer}\n")
+        if response.used_context:
+            print(f"(References: {format_sources(response.contexts)})\n")
 
 
 if __name__ == "__main__":
