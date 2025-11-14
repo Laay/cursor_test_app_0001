@@ -1,0 +1,1 @@
+Applicant tracking systems (ATS) help recruiters manage job applications. Modern ATS platforms rely on retrieval-augmented generation to surface precise answers about hiring policies, compliance rules, and interview logistics. This sample document ensures the pipeline has at least one source chunk to index.
